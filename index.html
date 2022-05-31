@@ -1,0 +1,128 @@
+<html>
+
+<head>
+    <script>
+        var boxNum = 3;
+        var elements = [];
+        var clickedSide;
+        function addBox() {
+            boxNum += 1;
+            let newBox = document.createElement("input");
+            newBox.id = "box" + boxNum;
+            document.getElementById("boxes").appendChild(newBox);
+        }
+        function unLoadBoxes() {
+            for (let i = 1; i <= boxNum; i++) {
+                elements.push(document.getElementById("box" + String(i)).value);
+            }
+            document.getElementById("initialInput").style.display = "none";
+            loadComparison();
+        }
+        async function loadComparison() {
+            document.getElementById("comparison").style.display = "block";
+            let orderedList = [elements.pop()];
+            while (elements.length > 0) {
+                orderedList = await orderFromChaos(orderedList, elements.pop());
+            }
+            unLoadComparison();
+            loadList(orderedList);
+        }
+        async function orderFromChaos(ordered, element) {
+            if (ordered.length == 0) {
+                return [element];
+            }
+            let mid = Math.floor(ordered.length / 2);
+            updateComparison(ordered[mid], element);
+            let side = await getPickedSide();
+            if (side == 0) {
+                return ordered.slice(0, mid + 1).concat(await orderFromChaos(ordered.slice(mid + 1), element));
+            } else {
+                return (await orderFromChaos(ordered.slice(0, mid), element)).concat(ordered.slice(mid));
+            }
+        }
+        function getPickedSide() {
+            return new Promise(resolve => {
+                clickedSide = resolve;
+            })
+        }
+        function updateComparison(element1, element2) {
+            document.getElementById("leftText").innerHTML = element1;
+            document.getElementById("rightText").innerHTML = element2;
+        }
+        function unLoadComparison() {
+            document.getElementById("comparison").style.display = "none";
+        }
+        function loadList(finishedList) {
+            document.getElementById("endList").style.display = "block";
+            let newGuy;
+            for(let i = 0; i < finishedList.length; i++) {
+                newGuy = document.createElement("li");
+                newGuy.innerHTML = finishedList[i];
+                document.getElementById("endList").appendChild(newGuy);
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            text-align: center;
+            transition: all, 0.2s;
+        }
+
+        input {
+            display: block;
+        }
+
+        #left {
+            width: 50vw;
+            height: 100vh;
+            position: absolute;
+            background-color: red;
+            color: white;
+        }
+
+        #left:hover {
+            background-color: green;
+            cursor: pointer;
+        }
+
+        #right:hover {
+            background-color: green;
+            cursor: pointer;
+        }
+
+        #right {
+            width: 50vw;
+            height: 100vh;
+            position: absolute;
+            left: 50vw;
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="initialInput">
+        <div id="boxes">
+            <input type="text" id="box1">
+            <input type="text" id="box2">
+            <input type="text" id="box3">
+        </div>
+        <button onclick="addBox()">Add</button>
+        <br>
+        <button onclick="unLoadBoxes()">Submit</button>
+    </div>
+    <div id="comparison" style="display: none;">
+        <div id="left" onclick="clickedSide(0)">
+            <h1 id="leftText"></h1>
+        </div>
+        <div id="right" onclick="clickedSide(1)">
+            <h1 id="rightText"></h1>
+        </div>
+    </div>
+    <ol id="endList" style="display: none;">
+    </ol>
+</body>
+
+</html>
